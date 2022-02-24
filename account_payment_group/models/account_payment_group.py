@@ -295,7 +295,7 @@ class AccountPaymentGroup(models.Model):
         self = self.with_context(
             active_model=self._name, active_id=self.id, active_ids=self.ids)
 
-        return self.env.ref('account_payment_group.action_report_payment_group').report_action(self)
+        return self.env.ref('account_payment_group.report_payment_group_action').report_action(self)
 
     @api.depends('company_id.double_validation', 'partner_type')
     def _compute_payment_subtype(self):
