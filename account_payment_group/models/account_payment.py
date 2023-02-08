@@ -133,7 +133,7 @@ class AccountPayment(models.Model):
     def create(self, vals_list):
         """ If a payment is created from anywhere else we create the payment group in top """
         recs = super().create(vals_list)
-        for rec in recs.filtered(lambda x: not x.payment_group_id and not x.is_internal_transfer).with_context(
+        for rec in recs.filtered(lambda x: not x.payment_group_id and not x.is_internal_transfer and not x.pos_session_id).with_context(
                 created_automatically=True):
             if not rec.partner_id:
                 raise ValidationError(_(
