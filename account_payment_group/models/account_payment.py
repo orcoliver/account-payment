@@ -133,8 +133,11 @@ class AccountPayment(models.Model):
     def create(self, vals_list):
         """ If a payment is created from anywhere else we create the payment group in top """
         recs = super().create(vals_list)
+        _logger.warning("Pasando por create de account.payment")
         for rec in recs.filtered(lambda x: not x.payment_group_id and not x.is_internal_transfer and not x.pos_session_id).with_context(
                 created_automatically=True):
+            _logger.warning("Pasando por for")
+            _logger.warning(rec)
             if not rec.partner_id:
                 raise ValidationError(_(
                     'Manual payments should not be created manually but created from Customer Receipts / Supplier Payments menus'))
