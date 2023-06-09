@@ -129,29 +129,32 @@ class AccountPayment(models.Model):
                     rec.company_id, rec.date)
             rec.amount_company_currency = amount_company_currency
 
+    def _get_fields_to_valid(self):
+        fields = ['payment_group_id', 'is_internal_transfer']
+        if 'pos_session_id' in self.env['account.payment']._fields:
+            fields.append('pos_session_id')
+        return fields
+
     @api.model_create_multi
     def create(self, vals_list):
         """ If a payment is created from anywhere else we create the payment group in top """
         recs = super().create(vals_list)
 
-        fields_to_valid = ['payment_group_id', 'is_internal_transfer']
+        fields_to_valid = self._get_fields_to_valid()
 
-        if 'pos_session_id' in self.env['account.payment']._fields:
-            fields_to_valid.append('pos_session_id')
-
-            for rec in recs.filtered(lambda x: all(not getattr(x, field) for field in fields_to_valid)).\
-                with_context(created_automatically=True):
-                if not rec.partner_id:
-                    raise ValidationError(_(
-                        'Manual payments should not be created manually but created from Customer Receipts / Supplier Payments menus'))
-                rec.payment_group_id = self.env['account.payment.group'].create({
-                    'company_id': rec.company_id.id,
-                    'partner_type': rec.partner_type,
-                    'partner_id': rec.partner_id.id,
-                    'payment_date': rec.date,
-                    'communication': rec.ref,
-                })
-                rec.payment_group_id.post()
+        for rec in recs.filtered(lambda x: all(not getattr(x, field) for field in fields_to_valid)).\
+            with_context(created_automatically=True):
+            if not rec.partner_id:
+                raise ValidationError(_(
+                    'Manual payments should not be created manually but created from Customer Receipts / Supplier Payments menus'))
+            rec.payment_group_id = self.env['account.payment.group'].create({
+                'company_id': rec.company_id.id,
+                'partner_type': rec.partner_type,
+                'partner_id': rec.partner_id.id,
+                'payment_date': rec.date,
+                'communication': rec.ref,
+            })
+            rec.payment_group_id.post()
         return recs
 
     @api.depends('payment_group_id')
